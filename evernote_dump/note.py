@@ -39,21 +39,21 @@ class Note(object):
 
     def append_html(self, text):
         self.__html += text
-        
+
     def append_tag(self, tag):
         self.__tags.append(tag)
-    
+
     def append_to_notemd(self, text):
         # Adds a new line of text to the markdown version of the note
         self.__notemd += "\n" + text
-        
+
     def clean_html(self):
         # Cleans self.__html and prepares it for markdown conversion.
         self.convert_evernote_markings()
 
         # Insert a title to be parsed in markdown
-        self.__html = ("<h1>" + self.__title + "</h1>" + self.__html).encode('utf-8') 
-        
+        self.__html = ("<h1>" + self.__title + "</h1>" + self.__html).encode('utf-8')
+
     def convert_evernote_markings(self):
         self.convert_evernote_markings_attachments()
         replacements = (
@@ -66,7 +66,7 @@ class Note(object):
         )
         for take, give in replacements:
             self.__html = self.__html.replace(take, give)
-        
+
     def convert_evernote_markings_attachments(self):
         # Find all attachment links in notes
         matches = re.findall(r'<en-media[^>]*\/>', self.__html)
@@ -79,15 +79,18 @@ class Note(object):
 
     def convert_html_to_markdown(self):
         self.__markdown = self.html2text.handle(self.__html.decode('utf-8'))
-        
+
     def create_file(self):
-        with open(self.__path + self.__filename,'w') as outfile:
+        fname = self.__path + self.__filename
+        with open(fname,'w') as outfile:
             outfile.write(self.__markdown)
+        if len(self.__tags) > 0:
+            add_tags(fname, self.__tags)
         os.utime(self.__path, (self.__created_date.timestamp(), self.__updated_date.timestamp()))
 
     def create_filename(self):
-        self.__filename = checkForDouble(makeDirCheck(self.__path),  urlSafeString(self.__title[:30]) + ".md")    
-    
+        self.__filename = checkForDouble(makeDirCheck(self.__path),  urlSafeString(self.__title[:30]) + ".md")
+
     def create_markdown(self):
         self.clean_html()
         self.convert_html_to_markdown()
@@ -96,7 +99,7 @@ class Note(object):
         if len(self.__tags) > 0:
             self.create_markdown_note_tags()
         self.create_file()
-            
+
     def create_markdown_attachments(self):
         # Appends the attachment information in markdown format to self.__markdown
         if len(self.__attachments) > 0:
@@ -105,7 +108,7 @@ class Note(object):
             for i in range(len(self.__attachments)):
                 self.__markdown += "\n[%s]: %s%s" % (self.__attachments[i].get_hash(), self.__MEDIA_PATH, self.__attachments[i].get_filename())
                 self.__markdown += self.__attachments[i].get_attributes()
-                
+
     def create_markdown_note_attr(self):
         self.__markdown += "\n---"
         self.__markdown += "\n### NOTE ATTRIBUTES"
@@ -114,7 +117,7 @@ class Note(object):
         if len(self.__attributes) > 0:
             for attr in self.__attributes:
                 self.__markdown += "\n>%s: %s  " % (attr[0], attr[1])
-        
+
     def create_markdown_note_tags(self):
         self.__markdown += "\n\n---"
         self.__markdown += "\n### TAGS\n"
@@ -128,32 +131,35 @@ class Note(object):
 
     def get_created_date(self):
         return self.__created_date
-    
+
     def get_filename(self):
         return self.__filename
 
+    def get_tags(self):
+        return self.__tags
+
     def get_title(self):
         return self.__title
-    
+
     def get_uuid(self):
         return self.__uuid
 
     def new_attachment(self, filename):
         self.__attachments.append(Attachment(filename))
-        
+
     def set_created_date(self, date_string):
         self.__created_date = datetime.strptime(date_string, self.__ISO_DATE_FORMAT)
-    
+
     def set_updated_date(self, date_string):
         self.__updated_date = datetime.strptime(date_string, self.__ISO_DATE_FORMAT)
 
     def set_path(self, path):
         self.__path = path
-        
+
     def set_title(self, title):
         self.__title = title
         self.create_filename()
-        
+
 ######################
 ## ATTACHMENT CLASS ##
 ######################
@@ -175,7 +181,8 @@ class Attachment(object):
         self.__rawdata = ""
         self.__attributes = []
         self.__path = ""
-    
+        self.__tags = []
+
     def add_found_attribute(self, attr, dataline):
         self.__attributes.append([attr, dataline])
 
@@ -184,9 +191,11 @@ class Attachment(object):
         __path = makeDirCheck(self.__path + self.__MEDIA_PATH) + self.__filename
         with open(__path,'wb') as outfile:
             outfile.write(self.__rawdata)
+        if len(self.__tags) > 0:
+            add_tags(__path, self.__tags)
         os.utime(__path, (self.__created_date.timestamp(), self.__created_date.timestamp()))
         self.__rawdata = ""
-        
+
     def create_filename(self, keep_file_names):
         __base = self.__filename
         __extension = ""
@@ -206,13 +215,13 @@ class Attachment(object):
         else:
             # Create a filename from created date if none found or unwanted
             self.__filename = self.__created_date.strftime(self.__TIME_FORMAT) + '.' + __extension
-        
+
         # Remove spaces from filenames since markdown links won't work with spaces
         self.__filename = self.__filename.replace(" ", "_")
-        
+
         # Try the filename and if a file with the same name exists add a counter to the end
-        self.__filename = checkForDouble(self.__path + self.__MEDIA_PATH,  self.__filename)    
-        
+        self.__filename = checkForDouble(self.__path + self.__MEDIA_PATH,  self.__filename)
+
     def create_hash(self):
         md5 = hashlib.md5()
         md5.update(self.__rawdata)
@@ -223,7 +232,7 @@ class Attachment(object):
         self.decodeBase64()
         self.create_hash()
         self.create_file()
-        
+
     def get_attributes(self):
         # Create a string of markdown code neatly formatted for all attributes
         export = "\n[%s](%s%s)" % (self.__filename, self.__MEDIA_PATH, self.__filename)
@@ -240,19 +249,19 @@ class Attachment(object):
         else:
             extension = mimetypes.guess_extension(mimetype)
             return extension.replace('.jpe', '.jpg')
-        
+
     def get_filename(self):
         return self.__filename
-    
+
     def get_hash(self):
         return self.__hash
-    
+
     def get_uuid(self):
         return self.__uuid
 
     def data_stream_in(self, dataline):
         self.__base64data.append(dataline.rstrip('\n'))
-    
+
     def decodeBase64(self):
         # Decode base64 image to memory
         try:
@@ -269,9 +278,12 @@ class Attachment(object):
 
     def set_mime(self, mime):
         self.__mime = mime
-    
+
     def set_path(self, path):
         self.__path = path
-        
+
+    def set_tags(self, tags):
+        self.__tags = tags
+
     def set_uuid(self, uuid):
         self.__uuid = uuid

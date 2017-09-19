@@ -38,12 +38,13 @@ class NoteHandler( xml.sax.ContentHandler ):
             self.attachment.set_path(current_file)
             self.attachment.set_created_date(self.note.get_created_date())
             self.attachment.set_filename(self.note.get_title())
+            self.attachment.set.tags(self.note.get_tags())
             self.attachment.set_uuid(self.note.get_uuid())
         elif tag == "note-attributes":
             self.in_note_attributes = True
         elif tag == "resource-attributes":
             self.in_resource_attributes = True
-    
+
     #########################
     ## ELEMENT READ FINISH ##
     #########################
@@ -87,14 +88,14 @@ class NoteHandler( xml.sax.ContentHandler ):
             self.attachment.set_mime(content_stream)
         elif self.CurrentData == "file-name":
             self.attachment.set_filename(content_stream)
-        
+
         if self.in_note_attributes:
             self.note.add_found_attribute(self.CurrentData, content_stream)
         if self.in_resource_attributes:
             self.attachment.add_found_attribute(self.CurrentData, content_stream)
 
 if ( __name__ == "__main__"):
-    
+
     if not isPythonThree():
         print("Please use Python version 3")
         sys.exit()
@@ -112,7 +113,7 @@ if ( __name__ == "__main__"):
     #override the default ContextHandler
     Handler = NoteHandler()
     parser.setContentHandler( Handler )
-    
+
     for i in range(1,len(sys.argv)):
         # pass in first argument as input file.
         if ".enex" in sys.argv[i]:

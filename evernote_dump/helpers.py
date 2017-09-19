@@ -11,13 +11,13 @@ def checkForDouble(path, filename):
     # Check file path and modifies it if a duplicate is found.
     # Used for creating new files.
     # Works with file extensions too.
-            
+
     path: to desired save point
-    
+
     returns: an updated path if path double found
     '''
     doubleCounter = 2
-    tempFileName = filename 
+    tempFileName = filename
     while os.path.exists(path + tempFileName):
         if len(filename.rsplit('.',1)) > 1:
             tempFileName = filename.rsplit('.', 1)[0] + \
@@ -30,7 +30,7 @@ def checkForDouble(path, filename):
 
 def isPythonThree():
     if sys.version_info[:2] <= (2, 7):
-        return False 
+        return False
     else:
         return True
 
@@ -82,18 +82,18 @@ def chooseLanguage():
                 result = int(input(phrase))
             except:
                 result = -1
-            
+
         if result <= len(languages) and result > 0:
-            selang = languages[result -1] 
+            selang = languages[result -1]
             break
-        
+
 def makeDirCheck(path):
     '''
     # Check if path exists. If not found path is created
-    # and the path is returned.  
+    # and the path is returned.
 
     path: location of new directory
-    
+
     returns: path
     '''
     if not os.path.exists(path):
@@ -123,3 +123,8 @@ def urlSafeString(text):
     for c in r'[]/\;,><&*:%=+@!#^()|?^':
         text = text.replace(c,'')
     return text
+
+def add_tags(F, TagList):
+    tas = ','.join(TagList)
+    print(tags, F)
+    return os.system('tag -a \'{}\' \'{}\''.format(tags, F))

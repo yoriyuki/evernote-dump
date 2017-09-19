@@ -125,6 +125,5 @@ def urlSafeString(text):
     return text
 
 def add_tags(F, TagList):
-    tas = ','.join(TagList)
-    print(tags, F)
+    tags = ','.join(TagList)
     return os.system('tag -a \'{}\' \'{}\''.format(tags, F))

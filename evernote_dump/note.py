@@ -86,7 +86,7 @@ class Note(object):
             outfile.write(self.__markdown)
         if len(self.__tags) > 0:
             add_tags(fname, self.__tags)
-        os.utime(self.__path, (self.__created_date.timestamp(), self.__updated_date.timestamp()))
+        os.utime(fname, (self.__created_date.timestamp(), self.__updated_date.timestamp()))
 
     def create_filename(self):
         self.__filename = checkForDouble(makeDirCheck(self.__path),  urlSafeString(self.__title[:30]) + ".md")
